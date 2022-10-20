@@ -1,0 +1,247 @@
+---
+title: "Relationship between Pereived Mental Health and Sense of Belonging into Local Community"
+author: "Asal Aslemand"
+date: '2022-07-19'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load the libraries that we need to use for our statisticsl analysis
+```{r Library Call, include = TRUE, warning = FALSE, message = FALSE}
+library(tinytex)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(mosaic)
+library(patchwork)
+```
+
+
+### Reading Data into R
+
+We first start by reading a data file into R.
+```{r Read Data into R, message = FALSE, warning = FALSE, include = TRUE}
+CCHS <- read_csv("CCHS.csv")
+```
+
+## Convert Character Variable Columns to Numeric Variables
+```{r Converst Character to Numeric, inlcude = TRUE, warning = FALSE}
+CCHS.Num <- CCHS %>% mutate_if(is.character, as.numeric)
+```
+
+### Filter Data
+```{r Filter, include = TRUE}
+## Filtering by 
+## Whether or Not Attending School/College/University (1 = Yes, 2 = No)
+## Age Range (2 = 15-17, 3 = 18-19, 4 = 20-24, 5 = 25-29)
+CCHS.2 <- CCHS.Num %>% filter((MAC_015 == 1 | MAC_015 == 2), (dhhgage > 1 & dhhgage <= 5))
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Frequency Distribution Tables
+```{r Freq Distn Tables in CCHS2 Data, include = TRUE}
+CCHS.2 %>% 
+  count(GEN_015)
+CCHS.2 %>% 
+  count(GEN_030)
+CCHS.2 <- CCHS.2 %>% drop_na(GEN_015, GEN_030)
+CCHS.2 %>% 
+  count(GEN_015)
+CCHS.2 %>% 
+  count(GEN_030)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Re-categorize levels
+```{r Re-level Variables, include = TRUE}
+# Positive Mental Health: 
+# Yes as Excellent, Very Good, Good; No as Fair or Poor
+# Sense of Belonging:
+# Strong as Very Strong, or Somewhat Strong; No as Somewhat Weak or Very Weak 
+CCHS.2 <- CCHS.2 %>% 
+  mutate(Positive.Mental.Health = case_when(GEN_015 <= 3 ~ "Yes", 
+                                            GEN_015 >= 4 ~ "No"), 
+         Sense.of.Belonging = case_when(GEN_030 <=2 ~ "Strong",
+                                     GEN_030 == 3 | GEN_030 == 4 ~ "Weak"),
+          Gender = case_when(DHH_SEX == 1 ~ "Male", 
+                            DHH_SEX == 2 ~ "Female"))
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Contingency Table for Mental Health and Sense of Belonging
+```{r TwoWay Table using Different R Packages, include = TRUE}
+
+# Two-way Table using {janitor} package
+# data frame
+CCHS.2 %>%                                  
+  # cross-tabulate counts of two columns
+  tabyl(Sense.of.Belonging, Positive.Mental.Health) %>%            
+  # add a total row, add a total column
+  adorn_totals(where = c("row", "col")) %>% 
+  # convert to proportions with row denominator
+  adorn_percentages(denominator = "row") %>% 
+  # convert proportions to percents
+  adorn_pct_formatting() %>%  
+  # display as: "count (percent)"
+  adorn_ns(position = "front") %>% 
+  # adjust titles
+  adorn_title(                                
+    row_name = "Sense of Belonging",
+    col_name = "Positive Mental Health") %>%
+  # print elegant results for interactive analysis or for sharing in a report
+  # e.g., with knitr::kable()
+  knitr::kable()
+
+# Two-way Table using {mosaic} package
+tally(~ Sense.of.Belonging + Positive.Mental.Health, margin = TRUE, data = CCHS.2)
+tally(~ Sense.of.Belonging + Positive.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Contingency Table for Mental Health and Gender
+```{r TwoWayTable using Different R Packages, include = TRUE}
+
+# Two-way Table using {janitor} package
+# data frame
+CCHS.2 %>%                                  
+  # cross-tabulate counts of two columns
+  tabyl(Gender, Positive.Mental.Health) %>%            
+  # add a total row, add a total column
+  adorn_totals(where = c("row", "col")) %>% 
+  # convert to proportions with row denominator
+  adorn_percentages(denominator = "row") %>% 
+  # convert proportions to percents
+  adorn_pct_formatting() %>%  
+  # display as: "count (percent)"
+  adorn_ns(position = "front") %>% 
+  # adjust titles
+  adorn_title(                                
+    row_name = "Gender",
+    col_name = "Positive Mental Health") %>%
+  # print elegant results for interactive analysis or for sharing in a report
+  # e.g., with knitr::kable()
+  knitr::kable()
+
+# Two-way Table using {mosaic} package
+tally(~ Gender + Positive.Mental.Health, margin = TRUE, data = CCHS.2)
+tally(~ Gender + Positive.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Bivariate Association: Bar Plots
+```{r Bar Plot of Data, include = TRUE}
+
+# Bar Plots of Positive Mental Health and Sense of Belonging
+bar.plot1 = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Sense.of.Belonging))) 
+bar.plot1 = bar.plot1 + geom_bar(position = "dodge")
+bar.plot1 = bar.plot1 + labs(fill = "Sense of Belonging")
+bar.plot1 = bar.plot1 + xlab("Positive Mental Health") 
+bar.plot1 = bar.plot1 + ylab("Count")
+
+# Bar Plots of Positive Mental Health and Gender
+bar.plot2 = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Gender))) 
+bar.plot2 = bar.plot2 + geom_bar(position = "dodge")
+bar.plot2 = bar.plot2 + labs(fill = "Gender")
+bar.plot2 = bar.plot2 + xlab("Positive Mental Health") 
+bar.plot2 = bar.plot2 + ylab("Count")
+
+bar.plot1 + bar.plot2 
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Mosaic Plot 1: Detect Pattern of Association 
+```{r Mosaic Plot 1, include = TRUE}
+ mosaicplot(~ CCHS.2$Sense.of.Belonging + CCHS.2$Positive.Mental.Health, 
+                          xlab = "Sense of Belonging", 
+                         ylab = "Positive Mental Health", 
+                          shade = TRUE, color = TRUE, 
+                          data = CCHS.2)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Mosaic Plot 2: Detect Pattern of Association 
+```{r Mosaic Plot 2, include = TRUE}
+mosaicplot(~ CCHS.2$Gender + CCHS.2$Positive.Mental.Health, 
+                          xlab = "Gender", 
+                         ylab = "Positive Mental Health", 
+                          shade = TRUE, color = TRUE, 
+                          data = CCHS.2)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+### Multivariate Association
+```{r ThreeWay Table using janitor R Package, include = TRUE}
+# data frame
+CCHS.2 %>%                                  
+  # cross-tabulate counts of two columns
+  tabyl(Sense.of.Belonging, Positive.Mental.Health, Gender) %>%            
+  # add a total row, add a total column
+  adorn_totals(where = c("row", "col")) %>% 
+  # convert to proportions with row denominator
+  adorn_percentages(denominator = "row") %>% 
+  # convert proportions to percents
+  adorn_pct_formatting() %>%  
+  # display as: "count (percent)"
+  adorn_ns(position = "front") %>% 
+  # adjust titles
+  adorn_title(                                
+    row_name = "Sense of Belonging",
+    col_name = "Positive Mental Health") %>%
+  # print elegant results for interactive analysis or for sharing in a report
+  # e.g., with knitr::kable()
+  knitr::kable()
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+```{r ThreeWay Table using mosaic R Package, include = TRUE}
+tally(~ Positive.Mental.Health | Sense.of.Belonging + Gender, 
+      margin = TRUE, data = CCHS.2)
+tally(~ Positive.Mental.Health | Sense.of.Belonging + Gender, 
+      margin = TRUE, format = "percent", data = CCHS.2)
+```
+
+```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
+cat('\\pagebreak')
+```
+
+```{r Multivariate Bar Plots, include=TRUE}
+# Side-by-side Bar Plots: Multivariate Association
+bar.plot = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Sense.of.Belonging))) 
+bar.plot = bar.plot + geom_bar(position = "dodge")
+bar.plot = bar.plot + labs(fill = "Sense of Belonging")
+bar.plot = bar.plot + xlab("Positive Mental Health") 
+bar.plot = bar.plot + ggtitle("Bar Plots of Positive Mental Health and Sense of Belonging by Gender")
+bar.plot = bar.plot + facet_wrap(~factor(Gender), scales = "free_x")
+bar.plot = bar.plot + theme_bw()
+bar.plot
+```
