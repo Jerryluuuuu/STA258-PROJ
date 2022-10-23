@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Load the libraries that we need to use for our statisticsl analysis
-```{r Library Call, include = TRUE, warning = FALSE, message = FALSE}
+```{r Library Call, echo = TRUE, warning = FALSE, message = FALSE}
 library(tinytex)
 library(knitr)
 library(tidyverse)
