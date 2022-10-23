@@ -49,12 +49,12 @@ cat('\\pagebreak')
 CCHS.2 %>% 
   count(GEN_015)
 CCHS.2 %>% 
-  count(GEN_030)
-CCHS.2 <- CCHS.2 %>% drop_na(GEN_015, GEN_030)
+  count(drgdvyac)
+CCHS.2 <- CCHS.2 %>% drop_na(GEN_015, drgdvyac)
 CCHS.2 %>% 
   count(GEN_015)
 CCHS.2 %>% 
-  count(GEN_030)
+  count(drgdvyac)
 ```
 
 ```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
@@ -70,8 +70,8 @@ cat('\\pagebreak')
 CCHS.2 <- CCHS.2 %>% 
   mutate(Positive.Mental.Health = case_when(GEN_015 <= 3 ~ "Yes", 
                                             GEN_015 >= 4 ~ "No"), 
-         Sense.of.Belonging = case_when(GEN_030 <=2 ~ "Strong",
-                                     GEN_030 == 3 | GEN_030 == 4 ~ "Weak"),
+         Drug.use = case_when(drgdvyac <=1 ~ "negative",
+                                     GEN_030 >= 2 ~ "positive "),
           Gender = case_when(DHH_SEX == 1 ~ "Male", 
                             DHH_SEX == 2 ~ "Female"))
 ```
@@ -80,14 +80,14 @@ CCHS.2 <- CCHS.2 %>%
 cat('\\pagebreak')
 ```
 
-### Contingency Table for Mental Health and Sense of Belonging
+### Contingency Table for Perceived Mental Health and Drug use
 ```{r TwoWay Table using Different R Packages, include = TRUE}
 
 # Two-way Table using {janitor} package
 # data frame
 CCHS.2 %>%                                  
   # cross-tabulate counts of two columns
-  tabyl(Sense.of.Belonging, Positive.Mental.Health) %>%            
+  tabyl(Drug.use, Perceived.Mental.Health) %>%            
   # add a total row, add a total column
   adorn_totals(where = c("row", "col")) %>% 
   # convert to proportions with row denominator
@@ -98,15 +98,15 @@ CCHS.2 %>%
   adorn_ns(position = "front") %>% 
   # adjust titles
   adorn_title(                                
-    row_name = "Sense of Belonging",
-    col_name = "Positive Mental Health") %>%
+    row_name = "Drug use",
+    col_name = "Perceived Mental Health") %>%
   # print elegant results for interactive analysis or for sharing in a report
   # e.g., with knitr::kable()
   knitr::kable()
 
 # Two-way Table using {mosaic} package
-tally(~ Sense.of.Belonging + Positive.Mental.Health, margin = TRUE, data = CCHS.2)
-tally(~ Sense.of.Belonging + Positive.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
+tally(~ Drug.use + Perceived.Mental.Health, margin = TRUE, data = CCHS.2)
+tally(~ Drug.use + Perceived.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
 ```
 
 ```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
@@ -120,7 +120,7 @@ cat('\\pagebreak')
 # data frame
 CCHS.2 %>%                                  
   # cross-tabulate counts of two columns
-  tabyl(Gender, Positive.Mental.Health) %>%            
+  tabyl(Gender, Perceived.Mental.Health) %>%            
   # add a total row, add a total column
   adorn_totals(where = c("row", "col")) %>% 
   # convert to proportions with row denominator
@@ -132,14 +132,14 @@ CCHS.2 %>%
   # adjust titles
   adorn_title(                                
     row_name = "Gender",
-    col_name = "Positive Mental Health") %>%
+    col_name = "Perceived Mental Health") %>%
   # print elegant results for interactive analysis or for sharing in a report
   # e.g., with knitr::kable()
   knitr::kable()
 
 # Two-way Table using {mosaic} package
-tally(~ Gender + Positive.Mental.Health, margin = TRUE, data = CCHS.2)
-tally(~ Gender + Positive.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
+tally(~ Gender + Perceived.Mental.Health, margin = TRUE, data = CCHS.2)
+tally(~ Gender + Perceived.Mental.Health, margin = TRUE, format = "percent", data = CCHS.2)
 ```
 
 ```{r, results='asis', eval=(opts_knit$get('rmarkdown.pandoc.to') == 'latex'), echo = FALSE}
@@ -149,18 +149,18 @@ cat('\\pagebreak')
 ### Bivariate Association: Bar Plots
 ```{r Bar Plot of Data, include = TRUE}
 
-# Bar Plots of Positive Mental Health and Sense of Belonging
-bar.plot1 = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Sense.of.Belonging))) 
+# Bar Plots of Perceived Mental Health and Drug use
+bar.plot1 = ggplot(CCHS.2, aes(x = factor(Perceived.Mental.Health), fill = factor(Drug.use))) 
 bar.plot1 = bar.plot1 + geom_bar(position = "dodge")
-bar.plot1 = bar.plot1 + labs(fill = "Sense of Belonging")
-bar.plot1 = bar.plot1 + xlab("Positive Mental Health") 
+bar.plot1 = bar.plot1 + labs(fill = "Drug use")
+bar.plot1 = bar.plot1 + xlab("Perceived Mental Health") 
 bar.plot1 = bar.plot1 + ylab("Count")
 
 # Bar Plots of Positive Mental Health and Gender
-bar.plot2 = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Gender))) 
+bar.plot2 = ggplot(CCHS.2, aes(x = factor(Perceived.Mental.Health), fill = factor(Gender))) 
 bar.plot2 = bar.plot2 + geom_bar(position = "dodge")
 bar.plot2 = bar.plot2 + labs(fill = "Gender")
-bar.plot2 = bar.plot2 + xlab("Positive Mental Health") 
+bar.plot2 = bar.plot2 + xlab("Perceived Mental Health") 
 bar.plot2 = bar.plot2 + ylab("Count")
 
 bar.plot1 + bar.plot2 
@@ -173,8 +173,8 @@ cat('\\pagebreak')
 ### Mosaic Plot 1: Detect Pattern of Association 
 ```{r Mosaic Plot 1, include = TRUE}
  mosaicplot(~ CCHS.2$Sense.of.Belonging + CCHS.2$Positive.Mental.Health, 
-                          xlab = "Sense of Belonging", 
-                         ylab = "Positive Mental Health", 
+                          xlab = "Drug use", 
+                         ylab = "Perceived Mental Health", 
                           shade = TRUE, color = TRUE, 
                           data = CCHS.2)
 ```
@@ -187,7 +187,7 @@ cat('\\pagebreak')
 ```{r Mosaic Plot 2, include = TRUE}
 mosaicplot(~ CCHS.2$Gender + CCHS.2$Positive.Mental.Health, 
                           xlab = "Gender", 
-                         ylab = "Positive Mental Health", 
+                         ylab = "Perceived Mental Health", 
                           shade = TRUE, color = TRUE, 
                           data = CCHS.2)
 ```
@@ -201,7 +201,7 @@ cat('\\pagebreak')
 # data frame
 CCHS.2 %>%                                  
   # cross-tabulate counts of two columns
-  tabyl(Sense.of.Belonging, Positive.Mental.Health, Gender) %>%            
+  tabyl(Drug.use, perceived.Mental.Health, Gender) %>%            
   # add a total row, add a total column
   adorn_totals(where = c("row", "col")) %>% 
   # convert to proportions with row denominator
@@ -212,8 +212,8 @@ CCHS.2 %>%
   adorn_ns(position = "front") %>% 
   # adjust titles
   adorn_title(                                
-    row_name = "Sense of Belonging",
-    col_name = "Positive Mental Health") %>%
+    row_name = "Drug use",
+    col_name = "Perceived Mental Health") %>%
   # print elegant results for interactive analysis or for sharing in a report
   # e.g., with knitr::kable()
   knitr::kable()
@@ -224,9 +224,9 @@ cat('\\pagebreak')
 ```
 
 ```{r ThreeWay Table using mosaic R Package, include = TRUE}
-tally(~ Positive.Mental.Health | Sense.of.Belonging + Gender, 
+tally(~ Perceived.Mental.Health | Drug.use + Gender, 
       margin = TRUE, data = CCHS.2)
-tally(~ Positive.Mental.Health | Sense.of.Belonging + Gender, 
+tally(~ Perceived.Mental.Health | Drug.use + Gender, 
       margin = TRUE, format = "percent", data = CCHS.2)
 ```
 
@@ -236,11 +236,11 @@ cat('\\pagebreak')
 
 ```{r Multivariate Bar Plots, include=TRUE}
 # Side-by-side Bar Plots: Multivariate Association
-bar.plot = ggplot(CCHS.2, aes(x = factor(Positive.Mental.Health), fill = factor(Sense.of.Belonging))) 
+bar.plot = ggplot(CCHS.2, aes(x = factor(Perceived.Mental.Health), fill = factor(Drug.use))) 
 bar.plot = bar.plot + geom_bar(position = "dodge")
-bar.plot = bar.plot + labs(fill = "Sense of Belonging")
-bar.plot = bar.plot + xlab("Positive Mental Health") 
-bar.plot = bar.plot + ggtitle("Bar Plots of Positive Mental Health and Sense of Belonging by Gender")
+bar.plot = bar.plot + labs(fill = "Drug use")
+bar.plot = bar.plot + xlab("Perceived Mental Health") 
+bar.plot = bar.plot + ggtitle("Bar Plots of Perceived Mental Health and Drug use by Gender")
 bar.plot = bar.plot + facet_wrap(~factor(Gender), scales = "free_x")
 bar.plot = bar.plot + theme_bw()
 bar.plot
